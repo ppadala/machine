@@ -44,10 +44,12 @@ func (provisioner *WindowsProvisioner) CompatibleWithHost() bool {
 }
 
 func (provisioner *WindowsProvisioner) Service(name string, action serviceaction.ServiceAction) error {
-	ip, err := provisioner.Driver.GetIP()
-	if err != nil {
+	//ip, err := provisioner.Driver.GetIP()
+	ip := provisioner.Driver.GetMachineName() + "-ip.westus.cloudapp.azure.com"
+
+	/*if err != nil {
 		return err
-	}
+	}*/
 	d := provisioner.Driver
 	if out, err := drivers.WinRMRunCmd(ip, d.GetSSHUsername(), "docker#123$", fmt.Sprintf("net %s %s", action.String(), name)); err != nil {
 		log.Debugf("service output", out)
@@ -67,13 +69,15 @@ func (provisioner *WindowsProvisioner) GetDockerOptionsDir() string {
 func (provisioner *WindowsProvisioner) dockerDaemonResponding() bool {
 	log.Debug("checking docker daemon")
 
-	ip, err := provisioner.Driver.GetIP()
-	if err != nil {
+	//XXX
+	//ip, err := provisioner.Driver.GetIP()
+	ip := provisioner.Driver.GetMachineName() + "-ip.westus.cloudapp.azure.com"
+	/*if err != nil {
 		return false
-	}
+	}*/
 
 	d := provisioner.Driver
-	dockerVersionCommand := "docker -H 127.0.0.1:2376 --tls --tlscert c:\\ProgramData\\docker\\certs.d\\server.pem --tlskey c:\\ProgramData\\docker\\certs.d\\server-key.pem --tlscacert c:\\ProgramData\\docker\\certs.d\\ca.pem version"
+	dockerVersionCommand := "docker version"
 
 	if out, err := drivers.WinRMRunCmd(ip, d.GetSSHUsername(), "docker#123$", dockerVersionCommand); err != nil {
 		log.Warnf("Error getting WinRM command to check if the daemon is up: %s", err)
@@ -83,6 +87,30 @@ func (provisioner *WindowsProvisioner) dockerDaemonResponding() bool {
 
 	// The daemon is up if the command worked.  Carry on.
 	return true
+}
+
+func (provisioner *WindowsProvisioner) openDockerPort() error {
+	log.Debug("opening docker daemon port in Windows firewall")
+
+	//XXX
+	//ip, err := provisioner.Driver.GetIP()
+	ip := provisioner.Driver.GetMachineName() + "-ip.westus.cloudapp.azure.com"
+	/*if err != nil {
+		return false
+	}*/
+
+	d := provisioner.Driver
+	firewallCommand := "powershell -Command New-NetFirewallRule -Protocol TCP -LocalPort 2376 -Direction Inbound -Action Allow -DisplayName docker"
+
+	if out, err := drivers.WinRMRunCmd(ip, d.GetSSHUsername(), "docker#123$", firewallCommand); err != nil {
+		log.Warnf("Error getting WinRM command to set firewall rule: %s", err)
+		log.Debugf("firewall command output:\n%s", out)
+		return err
+	}
+
+	// The daemon is up if the command worked.  Carry on.
+	return nil
+
 }
 
 func (provisioner *WindowsProvisioner) Provision(swarmOptions swarm.Options, authOptions auth.Options, engineOptions engine.Options) error {
@@ -96,6 +124,10 @@ func (provisioner *WindowsProvisioner) Provision(swarmOptions swarm.Options, aut
 	provisioner.AuthOptions = setRemoteAuthOptions(provisioner)
 
 	if err := ConfigureAuth(provisioner); err != nil {
+		return err
+	}
+
+	if err := provisioner.openDockerPort(); err != nil {
 		return err
 	}
 

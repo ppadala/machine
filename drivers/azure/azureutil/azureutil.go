@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/docker/machine/drivers/azure/logutil"
+	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/log"
 
 	"github.com/Azure/azure-sdk-for-go/arm/compute"
@@ -159,6 +160,9 @@ func (a AzureClient) CreatePublicIPAddress(ctx *DeploymentContext, resourceGroup
 			Location: to.StringPtr(location),
 			Properties: &network.PublicIPAddressPropertiesFormat{
 				PublicIPAllocationMethod: ipType,
+				DNSSettings: &network.PublicIPAddressDNSSettings{
+					DomainNameLabel: to.StringPtr(name),
+				},
 			},
 		})
 	if err != nil {
@@ -459,7 +463,7 @@ func (a AzureClient) removeOSDiskBlob(resourceGroup, vmName, vhdURL string) erro
 	return err
 }
 
-func (a AzureClient) CreateVirtualMachine(resourceGroup, name, location, size, availabilitySetID, networkInterfaceID,
+func (a AzureClient) CreateVirtualMachine(os, resourceGroup, name, location, size, availabilitySetID, networkInterfaceID,
 	username, sshPublicKey, imageName string, storageAccount *storage.AccountProperties) error {
 	log.Info("Creating Virtual Machine...", logutil.Fields{
 		"name":     name,
@@ -481,56 +485,146 @@ func (a AzureClient) CreateVirtualMachine(resourceGroup, name, location, size, a
 	log.Debugf("OS disk blob will be placed at: %s", osDiskBlobURL)
 	log.Debugf("SSH key will be placed at: %s", sshKeyPath)
 
-	_, err = a.virtualMachinesClient().CreateOrUpdate(resourceGroup, name,
-		compute.VirtualMachine{
-			Location: to.StringPtr(location),
-			Properties: &compute.VirtualMachineProperties{
-				AvailabilitySet: &compute.SubResource{
-					ID: to.StringPtr(availabilitySetID),
-				},
-				HardwareProfile: &compute.HardwareProfile{
-					VMSize: compute.VirtualMachineSizeTypes(size),
-				},
-				NetworkProfile: &compute.NetworkProfile{
-					NetworkInterfaces: &[]compute.NetworkInterfaceReference{
-						{
-							ID: to.StringPtr(networkInterfaceID),
+	if os == drivers.LINUX {
+		_, err = a.virtualMachinesClient().CreateOrUpdate(resourceGroup, name,
+			compute.VirtualMachine{
+				Location: to.StringPtr(location),
+				Properties: &compute.VirtualMachineProperties{
+					AvailabilitySet: &compute.SubResource{
+						ID: to.StringPtr(availabilitySetID),
+					},
+					HardwareProfile: &compute.HardwareProfile{
+						VMSize: compute.VirtualMachineSizeTypes(size),
+					},
+					NetworkProfile: &compute.NetworkProfile{
+						NetworkInterfaces: &[]compute.NetworkInterfaceReference{
+							{
+								ID: to.StringPtr(networkInterfaceID),
+							},
 						},
 					},
-				},
-				OsProfile: &compute.OSProfile{
-					ComputerName:  to.StringPtr(name),
-					AdminUsername: to.StringPtr(username),
-					LinuxConfiguration: &compute.LinuxConfiguration{
-						DisablePasswordAuthentication: to.BoolPtr(true),
-						SSH: &compute.SSHConfiguration{
-							PublicKeys: &[]compute.SSHPublicKey{
-								{
-									Path:    to.StringPtr(sshKeyPath),
-									KeyData: to.StringPtr(sshPublicKey),
+					OsProfile: &compute.OSProfile{
+						ComputerName:  to.StringPtr(name),
+						AdminUsername: to.StringPtr(username),
+						LinuxConfiguration: &compute.LinuxConfiguration{
+							DisablePasswordAuthentication: to.BoolPtr(true),
+							SSH: &compute.SSHConfiguration{
+								PublicKeys: &[]compute.SSHPublicKey{
+									{
+										Path:    to.StringPtr(sshKeyPath),
+										KeyData: to.StringPtr(sshPublicKey),
+									},
 								},
 							},
 						},
 					},
-				},
-				StorageProfile: &compute.StorageProfile{
-					ImageReference: &compute.ImageReference{
-						Publisher: to.StringPtr(img.publisher),
-						Offer:     to.StringPtr(img.offer),
-						Sku:       to.StringPtr(img.sku),
-						Version:   to.StringPtr(img.version),
-					},
-					OsDisk: &compute.OSDisk{
-						Name:         to.StringPtr(fmt.Sprintf(fmtOSDiskResourceName, name)),
-						Caching:      compute.ReadWrite,
-						CreateOption: compute.FromImage,
-						Vhd: &compute.VirtualHardDisk{
-							URI: to.StringPtr(osDiskBlobURL),
+					StorageProfile: &compute.StorageProfile{
+						ImageReference: &compute.ImageReference{
+							Publisher: to.StringPtr(img.publisher),
+							Offer:     to.StringPtr(img.offer),
+							Sku:       to.StringPtr(img.sku),
+							Version:   to.StringPtr(img.version),
+						},
+						OsDisk: &compute.OSDisk{
+							Name:         to.StringPtr(fmt.Sprintf(fmtOSDiskResourceName, name)),
+							Caching:      compute.ReadWrite,
+							CreateOption: compute.FromImage,
+							Vhd: &compute.VirtualHardDisk{
+								URI: to.StringPtr(osDiskBlobURL),
+							},
 						},
 					},
 				},
+			})
+	} else if os == drivers.WINDOWS {
+		// XXX: Refactor the common parts from Linux
+		log.Debug("*Provisioning for Windows*")
+		log.Debug(img)
+
+		_, err = a.virtualMachinesClient().CreateOrUpdate(resourceGroup, name,
+			compute.VirtualMachine{
+				Location: to.StringPtr(location),
+				Properties: &compute.VirtualMachineProperties{
+					AvailabilitySet: &compute.SubResource{
+						ID: to.StringPtr(availabilitySetID),
+					},
+					HardwareProfile: &compute.HardwareProfile{
+						VMSize: compute.VirtualMachineSizeTypes(size),
+					},
+					NetworkProfile: &compute.NetworkProfile{
+						NetworkInterfaces: &[]compute.NetworkInterfaceReference{
+							{
+								ID: to.StringPtr(networkInterfaceID),
+							},
+						},
+					},
+					OsProfile: &compute.OSProfile{
+						ComputerName:         to.StringPtr(name),
+						AdminUsername:        to.StringPtr(username),
+						AdminPassword:        to.StringPtr("docker#123$"),
+						WindowsConfiguration: &compute.WindowsConfiguration{},
+						/*
+							ProvisionVMAgent: to.BoolPtr(true),
+							WinRM: &compute.WinRMConfiguration{
+								Listeners: &[]compute.WinRMListener{
+									{
+										Protocol: compute.HTTP,
+									},
+								},
+							},
+						},*/
+					},
+					StorageProfile: &compute.StorageProfile{
+						ImageReference: &compute.ImageReference{
+							Publisher: to.StringPtr(img.publisher),
+							Offer:     to.StringPtr(img.offer),
+							Sku:       to.StringPtr(img.sku),
+							Version:   to.StringPtr(img.version),
+						},
+						OsDisk: &compute.OSDisk{
+							Name:         to.StringPtr(fmt.Sprintf(fmtOSDiskResourceName, name)),
+							Caching:      compute.ReadWrite,
+							CreateOption: compute.FromImage,
+							Vhd: &compute.VirtualHardDisk{
+								URI: to.StringPtr(osDiskBlobURL),
+							},
+						},
+					},
+				},
+			})
+
+	}
+	return err
+}
+
+func (a AzureClient) CreateVirtualMachineExtension(os, resourceGroup, name, location string) error {
+	fqdn, err := a.GetFQDN(resourceGroup, name+"-ip")
+	if err != nil {
+		return err
+	}
+
+	vmExtension := compute.VirtualMachineExtension{
+		Type:     to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
+		Name:     to.StringPtr("winrm"),
+		Location: to.StringPtr(location),
+		Properties: &compute.VirtualMachineExtensionProperties{
+			Publisher:          to.StringPtr("Microsoft.Compute"),
+			Type:               to.StringPtr("CustomScriptExtension"),
+			TypeHandlerVersion: to.StringPtr("1.4"),
+			Settings: &map[string]interface{}{
+				"fileUris": []string{
+					"https://raw.githubusercontent.com/ppadala/machine/azure-windows/vendor/github.com/Azure/azure-quickstart-templates/201-vm-winrm-windows/ConfigureWinRM.ps1",
+					"https://raw.githubusercontent.com/ppadala/machine/azure-windows/vendor/github.com/Azure/azure-quickstart-templates/201-vm-winrm-windows/makecert.exe",
+					"https://raw.githubusercontent.com/ppadala/machine/azure-windows/vendor/github.com/Azure/azure-quickstart-templates/201-vm-winrm-windows/winrmconf.cmd",
+				},
+				"commandToExecute": "powershell -ExecutionPolicy Unrestricted -file ConfigureWinRM.ps1 " + fqdn,
 			},
-		})
+		},
+	}
+
+	log.Debug("Creating VM extensions")
+	_, err = a.virtualMachineExtensionsClient().CreateOrUpdate(
+		resourceGroup, name, "winrm", vmExtension)
 	return err
 }
 
@@ -604,6 +698,20 @@ func (a AzureClient) GetPrivateIPAddress(resourceGroup, name string) (string, er
 		return "", nil
 	}
 	return to.String((*nic.Properties.IPConfigurations)[0].Properties.PrivateIPAddress), nil
+}
+
+func (a AzureClient) GetFQDN(resourceGroup, name string) (string, error) {
+	f := logutil.Fields{"name": name}
+	log.Debug("Querying FQDN", f)
+	ip, err := a.publicIPAddressClient().Get(resourceGroup, name, "")
+	if err != nil {
+		return "", err
+	}
+	if ip.Properties == nil {
+		log.Debug("publicIP.Properties is nil. Could not determine FQDN", f)
+		return "", nil
+	}
+	return to.String(ip.Properties.DNSSettings.Fqdn), nil
 }
 
 // StartVirtualMachine starts the virtual machine and waits until it reaches

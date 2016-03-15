@@ -63,7 +63,7 @@ func setRemoteAuthOptions(p Provisioner) auth.Options {
 		authOptions.ServerKeyRemotePath = path.Join(dockerDir, "server-key.pem")
 	} else {
 		authOptions.CaCertRemotePath = dockerDir + "\\ca.pem"
-		authOptions.ServerCertRemotePath = dockerDir + "\\server.pem"
+		authOptions.ServerCertRemotePath = dockerDir + "\\server-cert.pem"
 		authOptions.ServerKeyRemotePath = dockerDir + "\\server-key.pem"
 	}
 	return authOptions

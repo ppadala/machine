@@ -98,9 +98,11 @@ func WinRMUpload(host string, username string, password string, indata string, o
 	log.Debug("Connecting to ", username, "@", password, ":", host, " copying to ", outfile)
 	c, err := winrm.New(&winrm.Config{
 		Host:     host,
-		Port:     5985,
+		Port:     5986,
 		Username: username,
 		Password: password,
+		Https:    true,
+		Insecure: true,
 		Timeout:  30 * time.Second,
 	})
 
@@ -131,9 +133,11 @@ func WinRMRunCmd(host string, username string, password string, command string) 
 	log.Debug("Connecting to ", username, "@", password, ":", host, " running command ", command)
 	c, err := winrm.New(&winrm.Config{
 		Host:     host,
-		Port:     5985,
+		Port:     5986,
 		Username: username,
 		Password: password,
+		Https:    true,
+		Insecure: true,
 		Timeout:  30 * time.Second,
 	})
 	if err != nil {

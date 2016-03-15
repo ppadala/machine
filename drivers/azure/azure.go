@@ -39,6 +39,7 @@ const (
 	flAzureLocation        = "azure-location"
 	flAzureSize            = "azure-size"
 	flAzureImage           = "azure-image"
+	flAzureOS              = "azure-os"
 	flAzureVNet            = "azure-vnet"
 	flAzureSubnet          = "azure-subnet"
 	flAzureSubnetPrefix    = "azure-subnet-prefix"
@@ -67,6 +68,7 @@ type Driver struct {
 	Location        string
 	Size            string
 	Image           string
+	OS              string
 	VirtualNetwork  string
 	SubnetName      string
 	SubnetPrefix    string
@@ -148,6 +150,11 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Usage:  "Azure virtual machine OS image",
 			EnvVar: "AZURE_IMAGE",
 			Value:  defaultAzureImage,
+		},
+		mcnflag.StringFlag{
+			Name:  flAzureOS,
+			Usage: "OS for the Azure VM (Windows|Linux)",
+			Value: drivers.LINUX,
 		},
 		mcnflag.StringFlag{
 			Name:   flAzureVNet,
@@ -233,6 +240,13 @@ func (d *Driver) SetConfigFromFlags(fl drivers.DriverOptions) error {
 	d.NoPublicIP = fl.Bool(flAzureNoPublicIP)
 	d.StaticPublicIP = fl.Bool(flAzureStaticPublicIP)
 	d.DockerPort = fl.Int(flAzureDockerPort)
+	d.OS = fl.String(flAzureOS)
+	if d.OS == "windows" {
+		d.OpenPorts = append(d.OpenPorts, "5986")
+		d.OpenPorts = append(d.OpenPorts, "5985")
+		d.OpenPorts = append(d.OpenPorts, "3389")
+
+	}
 
 	// Set flags on the BaseDriver
 	d.BaseDriver.SSHPort = sshPort
@@ -325,13 +339,21 @@ func (d *Driver) Create() error {
 	if err := c.CreateStorageAccount(d.ctx, d.ResourceGroup, d.Location, defaultStorageType); err != nil {
 		return err
 	}
-	if err := d.generateSSHKey(d.ctx); err != nil {
-		return err
+	if d.OS != "windows" {
+		if err := d.generateSSHKey(d.ctx); err != nil {
+			return err
+		}
 	}
-	if err := c.CreateVirtualMachine(d.ResourceGroup, d.naming().VM(), d.Location, d.Size, d.ctx.AvailabilitySetID,
+
+	if err := c.CreateVirtualMachine(d.OS, d.ResourceGroup, d.naming().VM(), d.Location, d.Size, d.ctx.AvailabilitySetID,
 		d.ctx.NetworkInterfaceID, d.BaseDriver.SSHUser, d.ctx.SSHPublicKey, d.Image, d.ctx.StorageAccount); err != nil {
 		return err
 	}
+
+	if err := c.CreateVirtualMachineExtension(d.OS, d.ResourceGroup, d.naming().VM(), d.Location); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -397,6 +419,10 @@ func (d *Driver) GetIP() (string, error) {
 // GetSSHHostname returns an IP address or hostname for the machine instance.
 func (d *Driver) GetSSHHostname() (string, error) {
 	return d.GetIP()
+}
+
+func (d *Driver) GetOS() string {
+	return d.OS
 }
 
 // GetURL returns a socket address to connect to Docker engine of the machine
