@@ -74,6 +74,8 @@ const (
 	GetSSHKeyPathMethod      = `.GetSSHKeyPath`
 	GetSSHPortMethod         = `.GetSSHPort`
 	GetSSHUsernameMethod     = `.GetSSHUsername`
+	GetWinRMUsernameMethod   = `.GetWinRMUsername`
+	GetWinRMPasswordMethod   = `.GetWinRMPassword`
 	GetStateMethod           = `.GetState`
 	PreCreateCheckMethod     = `.PreCreateCheck`
 	CreateMethod             = `.Create`
@@ -327,6 +329,24 @@ func (c *RPCClientDriver) GetSSHUsername() string {
 	}
 
 	return username
+}
+
+func (c *RPCClientDriver) GetWinRMUsername() string {
+	username, err := c.rpcStringCall(GetWinRMUsernameMethod)
+	if err != nil {
+		log.Warnf("Error attempting call to get WinRM username: %s", err)
+	}
+
+	return username
+}
+
+func (c *RPCClientDriver) GetWinRMPassword() string {
+	password, err := c.rpcStringCall(GetWinRMPasswordMethod)
+	if err != nil {
+		log.Warnf("Error attempting call to get WinRM password: %s", err)
+	}
+
+	return password
 }
 
 func (c *RPCClientDriver) GetState() (state.State, error) {

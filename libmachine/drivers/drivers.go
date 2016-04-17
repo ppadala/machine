@@ -41,6 +41,17 @@ type Driver interface {
 	// GetSSHUsername returns username for use with ssh
 	GetSSHUsername() string
 
+	// GetWinRMUsername returns username for use with WinRM
+	// applicable only for Windows docker hosts
+	GetWinRMUsername() string
+
+	// TODO: This is passed from command line in plain text
+	// have to swtich to cert based auth, but packer WinRM library
+	// doesn't support certs - @ppadala
+	// GetWinRMPassword returns password for use with WinRM
+	// applicable only for Windows docker hosts
+	GetWinRMPassword() string
+
 	// GetURL returns a Docker compatible host URL for connecting to this host
 	// e.g. tcp://1.2.3.4:2376
 	GetURL() (string, error)

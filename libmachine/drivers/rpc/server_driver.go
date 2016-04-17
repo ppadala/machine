@@ -186,6 +186,16 @@ func (r *RPCServerDriver) GetSSHUsername(_ *struct{}, reply *string) error {
 	return nil
 }
 
+func (r *RPCServerDriver) GetWinRMUsername(_ *struct{}, reply *string) error {
+	*reply = r.ActualDriver.GetWinRMUsername()
+	return nil
+}
+
+func (r *RPCServerDriver) GetWinRMPassword(_ *struct{}, reply *string) error {
+	*reply = r.ActualDriver.GetWinRMPassword()
+	return nil
+}
+
 func (r *RPCServerDriver) GetURL(_ *struct{}, reply *string) error {
 	info, err := r.ActualDriver.GetURL()
 	*reply = info

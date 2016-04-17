@@ -20,13 +20,6 @@ import (
 	"github.com/docker/machine/libmachine/provision/serviceaction"
 )
 
-const (
-	// default password set while creating Windows VMs
-	// TODO: need to pass the password back from driver, if user sets a
-	// different password
-	defaultWinPassword = "docker#123$"
-)
-
 type DockerOptions struct {
 	EngineOptions     string
 	EngineOptionsPath string
@@ -77,7 +70,6 @@ func ConfigureAuth(p Provisioner) error {
 	driver := p.GetDriver()
 	machineName := driver.GetMachineName()
 	authOptions := p.GetAuthOptions()
-	log.Debug(authOptions)
 	org := mcnutils.GetUsername() + "." + machineName
 	bits := 2048
 
@@ -163,18 +155,18 @@ func ConfigureAuth(p Provisioner) error {
 			return err
 		}
 
-		if err := drivers.WinRMUpload(ip, driver.GetSSHUsername(),
-			defaultWinPassword, string(caCert), authOptions.CaCertRemotePath); err != nil {
+		if err := drivers.WinRMUpload(ip, driver.GetWinRMUsername(),
+			driver.GetWinRMPassword(), string(caCert), authOptions.CaCertRemotePath); err != nil {
 			return err
 		}
 
-		if err := drivers.WinRMUpload(ip, driver.GetSSHUsername(),
-			defaultWinPassword, string(serverCert), authOptions.ServerCertRemotePath); err != nil {
+		if err := drivers.WinRMUpload(ip, driver.GetWinRMUsername(),
+			driver.GetWinRMPassword(), string(serverCert), authOptions.ServerCertRemotePath); err != nil {
 			return err
 		}
 
-		if err := drivers.WinRMUpload(ip, driver.GetSSHUsername(),
-			defaultWinPassword, string(serverKey), authOptions.ServerKeyRemotePath); err != nil {
+		if err := drivers.WinRMUpload(ip, driver.GetWinRMUsername(),
+			driver.GetWinRMPassword(), string(serverKey), authOptions.ServerKeyRemotePath); err != nil {
 			return err
 		}
 	} else {
@@ -300,8 +292,8 @@ func checkDaemonUp(p Provisioner, dockerPort int) func() bool {
 			if err != nil {
 				log.Warnf("Error running SSH command: %s", err)
 				return false
-				return matchNetstatOut(reDaemonListening, netstatOut)
 			}
+			return matchNetstatOut(reDaemonListening, netstatOut)
 		}
 	}
 }

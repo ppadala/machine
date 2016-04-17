@@ -7,6 +7,7 @@ import (
 
 const (
 	DefaultSSHUser          = "root"
+	DefaultWinRMUser        = "docker-user"
 	DefaultSSHPort          = 22
 	DefaultEngineInstallURL = "https://get.docker.com"
 	DefaultOS               = LINUX
@@ -20,6 +21,8 @@ type BaseDriver struct {
 	SSHUser        string
 	SSHPort        int
 	SSHKeyPath     string
+	WinRMUser      string
+	WinRMPassword  string
 	StorePath      string
 	SwarmMaster    bool
 	SwarmHost      string
@@ -72,6 +75,19 @@ func (d *BaseDriver) GetSSHUsername() string {
 		d.SSHUser = DefaultSSHUser
 	}
 	return d.SSHUser
+}
+
+// GetWinRMUsername returns the WinRM user name, docker-user if not specified
+func (d *BaseDriver) GetWinRMUsername() string {
+	if d.WinRMUser == "" {
+		d.WinRMUser = DefaultWinRMUser
+	}
+	return d.WinRMUser
+}
+
+// GetWinRMPassword returns the WinRM password
+func (d *BaseDriver) GetWinRMPassword() string {
+	return d.WinRMPassword
 }
 
 // PreCreateCheck is called to enforce pre-creation steps

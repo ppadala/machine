@@ -76,6 +76,14 @@ func (d *Driver) GetSSHUsername() string {
 	return ""
 }
 
+func (d *Driver) GetWinRMUsername() string {
+	return ""
+}
+
+func (d *Driver) GetWinRMPassword() string {
+	return ""
+}
+
 func (d *Driver) GetState() (state.State, error) {
 	return state.Error, NotLoadable{d.Name}
 }

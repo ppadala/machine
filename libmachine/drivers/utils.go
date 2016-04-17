@@ -102,7 +102,7 @@ func WinRMUpload(host string, username string, password string, indata string, o
 		Username: username,
 		Password: password,
 		Https:    true,
-		Insecure: true,
+		Insecure: true, // No CA check
 		Timeout:  30 * time.Second,
 	})
 
@@ -137,7 +137,7 @@ func WinRMRunCmd(host string, username string, password string, command string) 
 		Username: username,
 		Password: password,
 		Https:    true,
-		Insecure: true,
+		Insecure: true, // No CA check
 		Timeout:  30 * time.Second,
 	})
 	if err != nil {
