@@ -74,7 +74,7 @@ To generate your access token:
         default          -        virtualbox     Running   tcp://192.168.99.100:2376
         docker-sandbox   *        digitalocean   Running   tcp://45.55.139.48:2376
 
-    The new `docker-sandbox` machine is running, and it is the active host as indicated by the asterisk (*). When you create a new machine, your command shell automatically connects it. If for some reason your new machine is not the active host, you'll need to run `docker-machine env aws-sandbox`, followed by `eval $(docker-machine env docker-sandbox)` to connect to it.
+    The new `docker-sandbox` machine is running, and it is the active host as indicated by the asterisk (*). When you create a new machine, your command shell automatically connects to it. If for some reason your new machine is not the active host, you'll need to run `docker-machine env docker-sandbox`, followed by `eval $(docker-machine env docker-sandbox)` to connect to it.
 
 ### Step 4. Run Docker commands on the Droplet
 
@@ -133,7 +133,7 @@ To remove a host and all of its containers and images, first stop the machine, t
 
 If you monitor the Digital Ocean console while you run these commands, you will see it update first to reflect that the Droplet was stopped, and then removed.
 
-If you create a host with Docker Machine, but remove it through the cloud provider console, Machine will lose track of the server status. So please use the `docker-machine rm` command for hosts you create with `docker-machine --create`.
+If you create a host with Docker Machine, but remove it through the cloud provider console, Machine will lose track of the server status. So please use the `docker-machine rm` command for hosts you create with `docker-machine create`.
 
 ## Where to go next
 

@@ -290,18 +290,18 @@ func getFilesystemType(p Provisioner, directory string) (string, error) {
 }
 
 func checkDaemonUp(p Provisioner, dockerPort int) func() bool {
-	reDaemonListening := fmt.Sprintf(":%d.*LISTEN", dockerPort)
+	reDaemonListening := fmt.Sprintf(":%d\\s+.*:.*", dockerPort)
 	return func() bool {
 		if p.GetDriver().GetOS() == drivers.WINDOWS {
 			return true
 		} else {
 			// HACK: Check netstat's output to see if anyone's listening on the Docker API port.
-			netstatOut, err := p.SSHCommand("netstat -an")
+			netstatOut, err := p.SSHCommand("netstat -tln")
 			if err != nil {
 				log.Warnf("Error running SSH command: %s", err)
 				return false
+				return matchNetstatOut(reDaemonListening, netstatOut)
 			}
-			return matchNetstatOut(reDaemonListening, netstatOut)
 		}
 	}
 }

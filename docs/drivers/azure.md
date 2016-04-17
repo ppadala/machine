@@ -13,7 +13,6 @@ parent="smn_machine_drivers"
 You will need an Azure Subscription to use this Docker Machine driver.
 [Sign up for a free trial.][trial]
 
-
 > **NOTE:** This documentation is for the new version of the Azure driver, which started
 > shipping with v0.7.0. This driver is not backwards-compatible with the old
 > Azure driver. If you want to continue managing your existing Azure machines, please
@@ -34,6 +33,14 @@ authenticate:
 
 After authenticating, the driver will remember your credentials up to two weeks.
 
+> **KNOWN ISSUE:** There is a known issue with Azure Active Directory causing stored
+> credentials to expire within hours rather than 14 days when the user logs in with
+> personal Microsoft Account (formerly _Live ID_) instead of an Active Directory account.
+> Currently, there is no ETA for resolution, however in the meanwhile you can
+> [create an AAD account][aad-docs] and login with that as a workaround.
+
+[aad-docs]: https://azure.microsoft.com/documentation/articles/virtual-machines-windows-create-aad-work-id/
+
 ## Options
 
 Azure driver only has a single required argument to make things easier. Please
@@ -45,19 +52,19 @@ Required:
 
 Optional:
 
-- `--azure-image`: Azure virtual machine image. [[?][vm-image]]
+- `--azure-image`: Azure virtual machine image in the format of Publisher:Offer:Sku:Version [[?][vm-image]]
 - `--azure-location`: Azure region to create the virtual machine. [[?][location]]
 - `--azure-resource-group`: Azure Resource Group name to create the resources in.
 - `--azure-size`: Size for Azure Virtual Machine. [[?][vm-size]]
 - `--azure-ssh-user`: Username for SSH login.
 - `--azure-vnet`: Azure Virtual Network name to connect the virtual machine. [[?][vnet]]
 - `--azure-subnet`: Azure Subnet Name to be used within the Virtual Network.
-- `--azure-subnet-prefix`: Private CIDR block to be used for the new subnet.
+- `--azure-subnet-prefix`: Private CIDR block. Used to create subnet if it does not exist. Must match in the case that the subnet does exist.
 - `--azure-availability-set`: Azure Availability Set to place the virtual machine into. [[?][av-set]]
 - `--azure-open-port`: Make additional port number(s) accessible from the Internet [[?][nsg]]
 - `--azure-private-ip-address`: Specify a static private IP address for the machine.
-- `--azure-use-private-ip`: Use private IP address of the machine to connect.
-- `--azure-no-public-ip`: Do not create a public IP address for the machine.
+- `--azure-use-private-ip`: Use private IP address of the machine to connect. It's useful for managing Docker machines from another machine on the same network e.g. while deploying Swarm.
+- `--azure-no-public-ip`: Do not create a public IP address for the machine (implies `--azure-use-private-ip`). Should be used only when creating machines from an Azure VM within the same subnet.
 - `--azure-static-public-ip`: Assign a static public IP address to the machine.
 - `--azure-docker-port`: Port number for Docker engine [$AZURE_DOCKER_PORT]
 - `--azure-environment`: Azure environment (e.g. `AzurePublicCloud`, `AzureChinaCloud`).

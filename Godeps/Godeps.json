@@ -66,53 +66,53 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/Azure/azure-sdk-for-go/arm/compute",
-			"Comment": "v2.0.0-beta",
-			"Rev": "b4e3bc02a65dca5237084eba6e94f06a169f09c3"
+			"Comment": "v2.1.1-beta",
+			"Rev": "a1883f7b98346e4908a6c25230c95a8a3026a10c"
 		},
 		{
 			"ImportPath": "github.com/Azure/azure-sdk-for-go/arm/network",
-			"Comment": "v2.0.0-beta",
-			"Rev": "b4e3bc02a65dca5237084eba6e94f06a169f09c3"
+			"Comment": "v2.1.1-beta",
+			"Rev": "a1883f7b98346e4908a6c25230c95a8a3026a10c"
 		},
 		{
 			"ImportPath": "github.com/Azure/azure-sdk-for-go/arm/resources/resources",
-			"Comment": "v2.0.0-beta",
-			"Rev": "b4e3bc02a65dca5237084eba6e94f06a169f09c3"
+			"Comment": "v2.1.1-beta",
+			"Rev": "a1883f7b98346e4908a6c25230c95a8a3026a10c"
 		},
 		{
 			"ImportPath": "github.com/Azure/azure-sdk-for-go/arm/resources/subscriptions",
-			"Comment": "v2.0.0-beta",
-			"Rev": "b4e3bc02a65dca5237084eba6e94f06a169f09c3"
+			"Comment": "v2.1.1-beta",
+			"Rev": "a1883f7b98346e4908a6c25230c95a8a3026a10c"
 		},
 		{
 			"ImportPath": "github.com/Azure/azure-sdk-for-go/arm/storage",
-			"Comment": "v2.0.0-beta",
-			"Rev": "b4e3bc02a65dca5237084eba6e94f06a169f09c3"
+			"Comment": "v2.1.1-beta",
+			"Rev": "a1883f7b98346e4908a6c25230c95a8a3026a10c"
 		},
 		{
 			"ImportPath": "github.com/Azure/azure-sdk-for-go/storage",
-			"Comment": "v2.0.0-beta",
-			"Rev": "b4e3bc02a65dca5237084eba6e94f06a169f09c3"
+			"Comment": "v2.1.1-beta",
+			"Rev": "a1883f7b98346e4908a6c25230c95a8a3026a10c"
 		},
 		{
 			"ImportPath": "github.com/Azure/go-autorest/autorest",
-			"Comment": "v6.0.0",
-			"Rev": "c6f4f7f3678803fbe8975c884e80affad9d31998"
+			"Comment": "v7.0.4",
+			"Rev": "b01ec2b60f95678fa759f796bac3c6b9bceaead4"
 		},
 		{
 			"ImportPath": "github.com/Azure/go-autorest/autorest/azure",
-			"Comment": "v6.0.0",
-			"Rev": "c6f4f7f3678803fbe8975c884e80affad9d31998"
+			"Comment": "v7.0.4",
+			"Rev": "b01ec2b60f95678fa759f796bac3c6b9bceaead4"
 		},
 		{
 			"ImportPath": "github.com/Azure/go-autorest/autorest/date",
-			"Comment": "v6.0.0",
-			"Rev": "c6f4f7f3678803fbe8975c884e80affad9d31998"
+			"Comment": "v7.0.4",
+			"Rev": "b01ec2b60f95678fa759f796bac3c6b9bceaead4"
 		},
 		{
 			"ImportPath": "github.com/Azure/go-autorest/autorest/to",
-			"Comment": "v6.0.0",
-			"Rev": "c6f4f7f3678803fbe8975c884e80affad9d31998"
+			"Comment": "v7.0.4",
+			"Rev": "b01ec2b60f95678fa759f796bac3c6b9bceaead4"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/aws",
@@ -293,7 +293,7 @@
 		},
 		{
 			"ImportPath": "github.com/pyr/egoscale/src/egoscale",
-			"Rev": "bbaa67324aeeacc90430c1fe0a9c620d3929512e"
+			"Rev": "347f81398d2ea1f3eebf1cd27ee3183669e34819"
 		},
 		{
 			"ImportPath": "github.com/rackspace/gophercloud",
