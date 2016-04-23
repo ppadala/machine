@@ -50,15 +50,17 @@ type RPCCall struct {
 }
 
 type InternalClient struct {
-	MachineName    string
-	RPCClient      *rpc.Client
-	rpcServiceName string
+	MachineName      string
+	RPCClient        *rpc.Client
+	rpcServiceName   string
+	rpcServerVersion int
 }
 
 const (
 	RPCServiceNameV0 = `RpcServerDriver`
 	RPCServiceNameV1 = `RPCServerDriver`
 
+	// API version 1
 	HeartbeatMethod          = `.Heartbeat`
 	GetVersionMethod         = `.GetVersion`
 	CloseMethod              = `.Close`
@@ -74,8 +76,6 @@ const (
 	GetSSHKeyPathMethod      = `.GetSSHKeyPath`
 	GetSSHPortMethod         = `.GetSSHPort`
 	GetSSHUsernameMethod     = `.GetSSHUsername`
-	GetWinRMUsernameMethod   = `.GetWinRMUsername`
-	GetWinRMPasswordMethod   = `.GetWinRMPassword`
 	GetStateMethod           = `.GetState`
 	PreCreateCheckMethod     = `.PreCreateCheck`
 	CreateMethod             = `.Create`
@@ -85,7 +85,11 @@ const (
 	RestartMethod            = `.Restart`
 	KillMethod               = `.Kill`
 	UpgradeMethod            = `.Upgrade`
-	GetOSMethod              = `.GetOS`
+
+	// API version 2
+	GetOSMethod            = `.GetOS`
+	GetWinRMUsernameMethod = `.GetWinRMUsername`
+	GetWinRMPasswordMethod = `.GetWinRMPassword`
 )
 
 func (ic *InternalClient) Call(serviceMethod string, args interface{}, reply interface{}) error {
@@ -169,8 +173,10 @@ func (f *DefaultRPCClientDriverFactory) NewRPCClientDriver(driverName string, ra
 	}
 
 	if serverVersion != version.APIVersion {
-		return nil, fmt.Errorf("Driver binary uses an incompatible API version (%d)", serverVersion)
+		log.Warnf("Driver binary uses an incompatible API version (%d)", serverVersion)
+		log.Infof("Using sane defaults for new functions for API version (%d)", version.APIVersion)
 	}
+
 	log.Debug("Using API Version ", serverVersion)
 
 	go func(c *RPCClientDriver) {
@@ -193,6 +199,7 @@ func (f *DefaultRPCClientDriverFactory) NewRPCClientDriver(driverName string, ra
 	mcnName = c.GetMachineName()
 	p.MachineName = mcnName
 	c.Client.MachineName = mcnName
+	c.Client.rpcServerVersion = serverVersion
 	c.plugin = p
 
 	return c, nil
@@ -258,10 +265,21 @@ func (c *RPCClientDriver) GetConfigRaw() ([]byte, error) {
 	return data, nil
 }
 
+// Should the client do a failsafe default for older plugins
+func (c *RPCClientDriver) FailSafe() bool {
+	return !(c.Client.rpcServerVersion == version.APIVersion)
+}
+
 func (c *RPCClientDriver) GetOS() string {
+	if c.FailSafe() {
+		log.Debug("Falling back to setting a sane default OS=linux for older plugins")
+		return drivers.LINUX
+	}
+
 	OS, err := c.rpcStringCall(GetOSMethod)
 	if err != nil {
 		log.Warnf("Error attempting call to get OS: %s", err)
+
 	}
 	return OS
 }
